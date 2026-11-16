@@ -1,0 +1,36 @@
+# Quraşdırma / build artefaktları
+node_modules/
+.next/
+.open-next/
+.wrangler/
+.gradle/
+build/
+build-outputs/
+*.zip
+
+# Cloudflare yerli məxfiliklər
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
+.wrangler-cache/
+
+# Android imzalama açarı — HEÇ VAXT repoya düşməməli!
+android-keystore
+android-keystore.bkp
+*.jks
+*.keystore
+*.idsig
+
+# Bubblewrap / TWA yerli fayllar
+bw-answers.txt
+manifest-checksum.txt
+
+# Sistem
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+
+# Playwright ekran görüntüləri
+site/shots/

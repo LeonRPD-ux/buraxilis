@@ -1,0 +1,42 @@
+{
+  "packageId": "az.buraxilis.app",
+  "host": "buraxilis.kennedyleonscott220.workers.dev",
+  "name": "Buraxılışa hazırlıq",
+  "launcherName": "Buraxılış",
+  "display": "standalone",
+  "themeColor": "#2540d9",
+  "themeColorDark": "#2540d9",
+  "navigationColor": "#2540d9",
+  "navigationColorDark": "#2540d9",
+  "navigationDividerColor": "#2540d9",
+  "navigationDividerColorDark": "#2540d9",
+  "backgroundColor": "#2540d9",
+  "enableNotifications": true,
+  "startUrl": "/",
+  "iconUrl": "https://buraxilis.kennedyleonscott220.workers.dev/icon-512.png",
+  "maskableIconUrl": "https://buraxilis.kennedyleonscott220.workers.dev/icon-maskable-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./android-keystore",
+    "alias": "android"
+  },
+  "appVersion": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "generatorApp": "Bubblewrap CLI",
+  "webManifestUrl": "https://buraxilis.kennedyleonscott220.workers.dev/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "minSdkVersion": 24,
+  "orientation": "portrait",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "displayOverride": []
+}

@@ -1,0 +1,28 @@
+name: APK yükləmə səhifəsi (GitHub Pages)
+
+on:
+  push:
+    branches: [main]
+    paths: ["github/**", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  pages: write
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Səhifəni hazırla
+        run: mkdir -p _pages && cp -r github/. _pages/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _pages
+      - id: deployment
+        uses: actions/deploy-pages@v4
