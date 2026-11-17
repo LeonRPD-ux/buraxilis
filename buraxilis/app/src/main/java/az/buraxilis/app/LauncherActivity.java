@@ -91,7 +91,7 @@ public class LauncherActivity extends Activity {
             }
         }, "AndroidBridge");
 
-        registerReceiver(new BroadcastReceiver() {
+        BroadcastReceiver done = new BroadcastReceiver() {
             @Override
             public void onReceive(Context c, Intent i) {
                 long id = i.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
@@ -107,7 +107,14 @@ public class LauncherActivity extends Activity {
                     Toast.makeText(c, "APK yükləndi — Yüklənlər qovluğundan quraşdır", Toast.LENGTH_LONG).show();
                 }
             }
-        }, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+        };
+        try {
+            androidx.core.content.ContextCompat.registerReceiver(this, done,
+                    new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),
+                    androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED);
+        } catch (Throwable e) {
+            registerReceiver(done, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+        }
 
         setContentView(web);
         web.loadUrl(START);
