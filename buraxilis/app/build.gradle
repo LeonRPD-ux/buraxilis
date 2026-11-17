@@ -57,8 +57,8 @@ android {
         applicationId "az.buraxilis.app"
         minSdkVersion 24
         targetSdkVersion 36
-        versionCode 1
-        versionName "1.0.0"
+        versionCode 2
+        versionName "1.1.0"
 
         // The name for the application
         resValue "string", "appName", twaManifest.name
@@ -147,9 +147,19 @@ android {
 
         
     }
+    signingConfigs {
+        release {
+            storeFile rootProject.file('apk-keystore.jks')
+            storePassword rootProject.file('apk-keystore-password.txt').text.trim()
+            keyAlias 'buraxilis'
+            keyPassword rootProject.file('apk-keystore-password.txt').text.trim()
+        }
+    }
     buildTypes {
         release {
             minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
     compileOptions {

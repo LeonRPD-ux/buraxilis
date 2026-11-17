@@ -25,6 +25,9 @@ android-keystore.bkp
 # Bubblewrap / TWA yerli fayllar
 bw-answers.txt
 manifest-checksum.txt
+run-bw.bat
+apk-keystore-password.txt
+local.properties
 
 # Sistem
 .DS_Store

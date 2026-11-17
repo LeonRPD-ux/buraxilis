@@ -331,7 +331,9 @@ nav a:hover:after,.nav-item:hover:after,.tab:hover:after{transform:scaleX(1)}
 @keyframes v28hop{0%{transform:scale(.96)}50%{transform:scale(1.04)}100%{transform:scale(1)}}
 .style-preset[data-style=canli] .swatch{background:linear-gradient(135deg,var(--sw1) 50%,var(--sw2) 50%)}
 </style>
-<script>(function(){var e=document.getElementById('bsplash');if(!e)return;var skip=false;try{var st=JSON.parse(localStorage.getItem('set')||'{}');if(st&&st.anim===false)skip=true;if(sessionStorage.getItem('bsSeen'))skip=true}catch(x){}
+<script>/* V28.8: APK (WebView) rejimində API sorğuları canlı worker-ə gedir */
+var APIX=(location.hostname==='appassets.androidplatform.net'||location.protocol==='file:')?'https://buraxilis.kennedyleonscott220.workers.dev':'';
+(function(){var e=document.getElementById('bsplash');if(!e)return;var skip=false;try{var st=JSON.parse(localStorage.getItem('set')||'{}');if(st&&st.anim===false)skip=true;if(sessionStorage.getItem('bsSeen'))skip=true}catch(x){}
 if(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches)skip=true;
 if(skip){e.remove();return}
 try{sessionStorage.setItem('bsSeen','1')}catch(x){}
@@ -716,7 +718,7 @@ function chatGo(code,name){code=(code||'').trim().toUpperCase();
  CHAT={code,id:CHAT&&CHAT.code==code?CHAT.id:null,n:SET.name,s:CHAT&&CHAT.code==code?CHAT.s:s,msgs:[],last:0};chatSave();
  chatJoin().then(chatDraw).catch(()=>alert('İnternet yoxdur — çat üçün bağlantı lazımdır.'))}
 async function chatJoin(){if(!CHAT)return;if(CHJ)return CHJ;CHJ=(async()=>{try{
- let r=await fetch(`/api/room/${CHAT.code}/join`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({n:CHAT.n,s:CHAT.s,id:CHAT.id||undefined})});
+ let r=await fetch(`${APIX}/api/room/${CHAT.code}/join`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({n:CHAT.n,s:CHAT.s,id:CHAT.id||undefined})});
  let j=await r.json();if(j.id){CHAT.id=j.id;chatSave()}}catch(e){}finally{CHJ=null}})();return CHJ}
 function chatDraw(){clearInterval(CHATT);clearInterval(CHJT);
  A.innerHTML=`<div class="top"><button onclick="chatLeave()">← Çıx</button><span class="sp"></span><button class="p" onclick="chatShare()">⧉ ${CHAT.code} kodu paylaş</button></div>
@@ -725,7 +727,7 @@ function chatDraw(){clearInterval(CHATT);clearInterval(CHJT);
  A.classList.remove('exam');CHATT=setInterval(chatPoll,2500);CHJT=setInterval(chatJoin,30000);chatPoll();scrollTo(0,0)}
 let CHP=false;
 async function chatPoll(){if(!CHAT||CHP)return;CHP=true;try{
- let r=await fetch(`/api/room/${CHAT.code}/state?since=${CHAT.last}`);let j=await r.json();if(j.err)return;
+ let r=await fetch(`${APIX}/api/room/${CHAT.code}/state?since=${CHAT.last}`);let j=await r.json();if(j.err)return;
  let L=$('#chl');if(L&&j.msgs)j.msgs.forEach(m=>{let mine=m.uid===CHAT.id,d=document.createElement('div');
   d.style.cssText=`margin:8px 0;padding:8px 12px;border-radius:14px;max-width:85%;${mine?'margin-left:auto;background:var(--p);color:var(--pi)':'background:var(--bg);border:1px solid var(--b)'}`;
   d.innerHTML=`<div style="font-size:12px;opacity:.75">${esc(m.u)} · ${new Date(m.d).toLocaleTimeString('az',{hour:'2-digit',minute:'2-digit'})}</div>${esc(m.t)}`;
@@ -733,7 +735,7 @@ async function chatPoll(){if(!CHAT||CHP)return;CHP=true;try{
  if(L)CHAT.last=j.last??CHAT.last;
  let M=$('#chm');if(M)M.innerHTML='Üzvlər: '+Object.values(j.members||{}).map(v=>`${esc(v.n)}${v.s?' ('+v.s+'%)':''}`).join(' · ')}catch(e){}finally{CHP=false}}
 async function chatSend(){if(!CHAT)return;let el=$('#chi'),t=(el.value||'').trim();if(!t)return;el.value='';
- try{await fetch(`/api/room/${CHAT.code}/msg`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id:CHAT.id,t})});chatPoll()}catch(e){say('Göndərilmədi — internet yoxdur.')}}
+ try{await fetch(`${APIX}/api/room/${CHAT.code}/msg`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id:CHAT.id,t})});chatPoll()}catch(e){say('Göndərilmədi — internet yoxdur.')}}
 function chatLeave(){clearInterval(CHATT);clearInterval(CHJT);CHAT=null;frUI()}
 function chatShare(){let t='Buraxılışa hazırlıq çat otağına qoşul: 💬\nKod: '+CHAT.code+'\n'+(location.href.startsWith('http')?location.href:'Tətbiqi aç → Dostlar → Canlı çat');
  if(navigator.share)navigator.share({title:'Çat otağı',text:t}).catch(()=>{});else{try{navigator.clipboard.writeText(t);say('Kod kopyalandı ✓')}catch(e){alert(t)}}}
@@ -758,11 +760,11 @@ function syConnect(){const i=$('#syIn'),c=((i&&i.value)||'').trim().toLowerCase(
 function syCopy(){try{navigator.clipboard.writeText(SY.code);syMsg('Kod kopyalandı ✓',1)}catch(e){}}
 function syOff(){if(!confirm('Bulud əlaqəsi bağlansın? Kodu yenidən yazaraq qaytara bilərsən.'))return;SY=null;sySave();syUI();syMsg('Bağlandı')}
 async function syPush(silent){if(!SY||SYP)return;SYP=true;if(!silent)syMsg('Yüklənir...');try{
- const r=await fetch('/api/sync/'+SY.code+'/push',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({d:syPayload(),n:navigator.userAgent.slice(0,60)})});
+ const r=await fetch(APIX+'/api/sync/'+SY.code+'/push',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({d:syPayload(),n:navigator.userAgent.slice(0,60)})});
  const j=await r.json();if(j.err)return syMsg('Xəta: '+j.err);
  SY.pushT=j.t||Date.now();sySave();if(!silent)syMsg('Buluda yükləndi ✓',1);syUI()}catch(e){if(!silent)syMsg('İnternet yoxdur — yüklənmədi')}finally{SYP=false}}
 async function syPull(silent){if(!SY||SYP)return;SYP=true;try{
- const r=await fetch('/api/sync/'+SY.code+'/pull'),j=await r.json();
+ const r=await fetch(APIX+'/api/sync/'+SY.code+'/pull'),j=await r.json();
  if(j.err==='empty'){return syMsg('Buludda hələ nüsxə yoxdur — əvvəlcə "Buluda yüklə" bas.')}
  if(j.err)return syMsg('Xəta: '+j.err);
  let d;try{d=JSON.parse(j.d)}catch(e){return syMsg('Buluddakı nüsxə oxunmadı')}
@@ -1448,8 +1450,8 @@ window.vocHome=function(){_vh.apply(this,arguments);try{
 })()}catch(e){console.warn(e)}
 
 /* PWA */
-var APP_VER='V28.7';
-try{if('serviceWorker' in navigator&&location.protocol.indexOf('http')==0){
+var APP_VER='V28.8';
+try{if('serviceWorker' in navigator&&location.protocol.indexOf('http')==0&&location.hostname!=='appassets.androidplatform.net'){
 const ru=()=>document.documentElement.lang=='ru',T=(a,r)=>ru()?r:a;
 const vnum=v=>{const m=/(\d+)\.(\d+)/.exec(v||'');return m?(+m[1])*1000+(+m[2]):0};
 let reg=null,shown=false,usz=null,pending=null;
@@ -1528,6 +1530,7 @@ if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catc
 /* ===== Yeniliklər: 4 səhifəli buraxılış bələdçisi ===== */
 try{
 const NEWS_PAGES=[
+ {icon:'📥',title:['V28.8 — Tam offline APK','V28.8 — Полностью офлайн APK'],lead:['Tətbiq artıq APK-nın içindədir — internet olmadan da işləyir.','Приложение теперь внутри APK — работает даже без интернета.'],body:['Android tətbiqi (APK) indi bütün tətbiqi öz yaddaşında saxlayır: internet olmadan da açılır və məşq edərsən. İnternet olduqda çat, bulud sinxronizasiya və yeniləmə yoxlaması işləyir — yeni versiya buraxılanda ana səhifədə "Yenilə" kartı görünür.','Android-приложение (APK) теперь хранит всё приложение в своей памяти: работает и без интернета. При наличии сети работают чат, облачная синхронизация и проверка обновлений — при новой версии на главной появится карточка «Обновить».']},
  {icon:'☁️',title:['V28.7 — Bulud sinxronizasiya','V28.7 — Облачная синхронизация'],lead:['Gedişatını buluda yüklə, başqa cihazda davam et.','Выгрузи прогресс в облако и продолжи на другом устройстве.'],body:['Ayarlar bölməsində "Bulud sinxronizasiya" kartı əlavə olundu: kod yarat, buluda yüklə, başqa cihazda eyni kodu yazıb "Buludan gətir" ilə bərpa et. İstəyirsənsə, imtahan bitəndə nəticə avtomatik buluda yüklənir. Əlavə: ana səhifədə hər 7 gündən bir ehtiyat nüsxə xatırladıcısı çıxır.','В настройках появилась карта «Облачная синхронизация»: создай код, выгрузи прогресс и восстанови на другом устройстве. Также добавлено напоминание о резервной копии на главной странице.']},
  {icon:'💬',title:['V28.6 — Canlı çat və dostlar','V28.6 — Живой чат и друзья'],lead:['Dostlarla canlı söhbət birlikdə hazırlıq üçün.','Общение с друзьями для совместной подготовки.'],body:['Ağıllı hazırlıq → Dostlar bölməsində “Canlı çat” aç: otaq kodu yarat, dostlarına göndər, birlikdə söhbət edin. Çatda adının yanında buraxılış nəticənin faizi görünür. Bundan əlavə: qrafik, floşkart, sual bankı filtri, nəticə kartı və VİT sualları.','В разделе «Друзья» открой «Живой чат»: создай код комнаты, отправь друзьям и общайтесь вместе. Рядом с именем виден процент по выпускному. Также: график, флешкарты, фильтр банка вопросов, карта результата и вопросы ВИТ.']},
  {icon:'🆕',title:['Yeni alətlər','Новые инструменты'],lead:['Qrafik, floşkart, filtri, paylaşma kartı və dostlar.','График, флешкарты, фильтр, карта результата и друзья.'],body:['Gedişatda nəticə qrafiki, məşqda floşkart və sual bankı filtri, nəticəni şəkil kimi paylaşma, cavab variantlarının qarışdırılması (Ayarlar → İmtahan) və Dostlar bölməsi əlavə olundu. VİT — vətəndaş cəmiyyəti və məlumat savadlılığı məşq sualları əlavə olundu.','В разделе прогресса — график, в практике — флешкарты и фильтр банка вопросов, результат можно отправить картинкой, варианты ответов перемешиваются (Настройки → Экзамен), появился раздел «Друзья». Добавлены вопросы ВИТ.']},
@@ -2059,5 +2062,22 @@ function bkBanner(){try{const a=document.getElementById('app');if(!a)return;cons
 window.addEventListener('load',()=>{try{if(TAB==='home')bkBanner()}catch(e){}});
 (function(){try{const _h=window.home;if(typeof _h==='function')window.home=function(){const r=_h.apply(this,arguments);try{bkBanner()}catch(e){}return r}}catch(e){}
  try{const _f=window.finish;if(typeof _f==='function')window.finish=function(){const r=_f.apply(this,arguments);try{syAuto()}catch(e){}return r}}catch(e){}})();
+
+/* ---- V28.8: APK daxili yeniləmə yoxlayıcısı (yalnız APK rejimində işləyir) ---- */
+(function(){try{
+ if(location.hostname!=='appassets.androidplatform.net')return;
+ const APK_URL='https://kennedyleonscott220-png.github.io/buraxilis/Buraxilis.apk';
+ const show=()=>{try{const a=document.getElementById('app');if(!a)return;const o=document.getElementById('apkUpd');if(o)return;
+  const d=document.createElement('div');d.id='apkUpd';d.className='card';
+  d.innerHTML='<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="font-size:26px">🆕</span><div style="flex:1;min-width:170px"><b>Yeni versiya buraxıldı</b><p class="m">Tətbiqi ən son versiyaya yenilə.</p></div><button class="p" data-upd>Yenilə</button><button data-skip>Bağla</button></div>';
+  d.querySelector('[data-upd]').onclick=()=>{try{window.AndroidBridge&&AndroidBridge.download(APK_URL)}catch(e){}};
+  d.querySelector('[data-skip]').onclick=()=>{try{d.remove()}catch(e){}};
+  a.insertBefore(d,a.firstChild)}catch(e){}};
+ fetch('https://buraxilis.kennedyleonscott220.workers.dev/version.json',{cache:'no-store'}).then(r=>r.json()).then(j=>{
+  try{if(!j.version||j.version===APP_VER)return}catch(e){return}
+  show();
+  try{const _h=window.home;if(typeof _h==='function')window.home=function(){const r=_h.apply(this,arguments);try{show()}catch(e){}return r}}catch(e){}
+ }).catch(()=>{});
+}catch(e){}})();
 </script>
 </body></html>

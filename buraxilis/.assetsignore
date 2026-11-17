@@ -36,3 +36,9 @@ node_modules
 /run-bw.bat
 /build-outputs
 /github
+/apk-keystore.jks
+/apk-keystore-password.txt
+/local.properties
+/app-release-unsigned-aligned.apk
+/app-release-signed.apk.idsig
+/app-release-bundle.aab

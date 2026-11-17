@@ -2,8 +2,15 @@
  * bu surət buraxilis/cloudflare/worker.js faylından kopyalayıb əks etdirilir.
  * Dəyişiklik edəndə hər iki faylı yenilə! */
 
-export const HDR = { 'content-type': 'application/json', 'cache-control': 'no-store' };
+/* V28.8: CORS — APK (WebView) kəsişmə origin-indən çat/sinxronizasiya çağırışları üçün */
+export const HDR = { 'content-type': 'application/json', 'cache-control': 'no-store', 'access-control-allow-origin': '*' };
 export const json = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: HDR });
+export const PREFLIGHT = {
+  'access-control-allow-origin': '*',
+  'access-control-allow-methods': 'POST, GET, OPTIONS',
+  'access-control-allow-headers': 'content-type',
+  'access-control-max-age': '86400'
+};
 
 /* Hər otaq üçün bir Room DO: üzvlər + mesajlar saxlanılır */
 export class Room {
@@ -84,6 +91,8 @@ export class Sync {
 /* /api/* yollarını uyğun DO-ya göndər */
 export async function handleApi(request, env) {
   const url = new URL(request.url);
+
+  if (request.method === 'OPTIONS' && url.pathname.startsWith('/api/')) return new Response(null, { status: 204, headers: PREFLIGHT });
 
   if (url.pathname.startsWith('/api/room/')) {
     const rest = url.pathname.slice('/api/room/'.length);

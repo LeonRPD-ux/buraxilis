@@ -1,6 +1,13 @@
 /* Buraxılışa hazırlıq — Canlı çat backend (Cloudflare Workers + Durable Objects) */
-const HDR = { 'content-type': 'application/json', 'cache-control': 'no-store' };
+/* V28.8: CORS — APK (WebView) kəsişmə origin-indən çat/sinxronizasiya çağırışları üçün */
+const HDR = { 'content-type': 'application/json', 'cache-control': 'no-store', 'access-control-allow-origin': '*' };
 const json = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: HDR });
+const PREFLIGHT = {
+  'access-control-allow-origin': '*',
+  'access-control-allow-methods': 'POST, GET, OPTIONS',
+  'access-control-allow-headers': 'content-type',
+  'access-control-max-age': '86400'
+};
 
 /* Android TWA (APK) → veb-sayt əlaqəsi; SHA256 barmaq izi bubblewrap build-dən sonra yazılır */
 const ASSETLINKS = [{
@@ -95,6 +102,7 @@ export class Room {
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
+    if (req.method === 'OPTIONS' && url.pathname.startsWith('/api/')) return new Response(null, { status: 204, headers: PREFLIGHT });
     if (url.pathname.startsWith('/api/room/')) {
       const rest = url.pathname.slice('/api/room/'.length);
       const [code, action = 'state'] = rest.split('/');
