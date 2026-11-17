@@ -23,6 +23,8 @@ table{width:100%;border-collapse:collapse}td,th{padding:8px 4px;border-bottom:1p
 .omr{display:flex;gap:8px;margin:4px 0 14px}.omr i{width:28px;height:28px;border-radius:50%;border:2px solid var(--m);display:grid;place-items:center;font:700 12px/1 system-ui,sans-serif;font-style:normal;color:var(--m)}
 .omr .on{background:var(--p);border-color:var(--p);color:var(--pi)}
 .hero{background:var(--ink);border-color:var(--ink);color:#fff}.hero .m{color:rgba(255,255,255,.78)}.hero b{font-size:19px;letter-spacing:-.01em}.hero button.p{background:#fff;border-color:#fff;color:var(--ink);margin-left:0}
+/* V28.9: hero içindəki ağ stat kartları — miras alınan ağ mətni düzəlt */
+.hero .card{color:var(--t)}.hero .card .m{color:var(--m)}.hero .card b{color:var(--t)}
 .home .card button:has(.m){text-align:left;line-height:1.35}.home .card button:has(.m) .m{font-weight:500}
 .top{display:flex;align-items:center;gap:6px;margin-bottom:10px}.sp{flex:1}
 .tm{font-weight:700;font-variant-numeric:tabular-nums;background:var(--c);border:1px solid var(--b);border-radius:999px;padding:6px 14px;font-size:14px;transition:background-color calc(var(--sp,1)*.3s),color calc(var(--sp,1)*.3s),border-color calc(var(--sp,1)*.3s)}
@@ -1450,7 +1452,7 @@ window.vocHome=function(){_vh.apply(this,arguments);try{
 })()}catch(e){console.warn(e)}
 
 /* PWA */
-var APP_VER='V28.8';
+var APP_VER='V28.9';
 try{if('serviceWorker' in navigator&&location.protocol.indexOf('http')==0&&location.hostname!=='appassets.androidplatform.net'){
 const ru=()=>document.documentElement.lang=='ru',T=(a,r)=>ru()?r:a;
 const vnum=v=>{const m=/(\d+)\.(\d+)/.exec(v||'');return m?(+m[1])*1000+(+m[2]):0};
@@ -1530,6 +1532,7 @@ if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catc
 /* ===== Yeniliklər: 4 səhifəli buraxılış bələdçisi ===== */
 try{
 const NEWS_PAGES=[
+ {icon:'🎨',title:['V28.9 — Göstərici düzəlişi','V28.9 — Исправление показателей'],lead:['"Öyrənmə göstəricilərin" kartındakı rəqəmlər artıq görünür.','Цифры в карточке «Показатели обучения» теперь видны.'],body:['İşıqlı temada XP, ardıcıl günlər və digər göstəricilərin görünməməsi problemi düzəldildi.','Исправлена проблема невидимых цифр XP, дней подряд и других показателей в светлой теме.']},
  {icon:'📥',title:['V28.8 — Tam offline APK','V28.8 — Полностью офлайн APK'],lead:['Tətbiq artıq APK-nın içindədir — internet olmadan da işləyir.','Приложение теперь внутри APK — работает даже без интернета.'],body:['Android tətbiqi (APK) indi bütün tətbiqi öz yaddaşında saxlayır: internet olmadan da açılır və məşq edərsən. İnternet olduqda çat, bulud sinxronizasiya və yeniləmə yoxlaması işləyir — yeni versiya buraxılanda ana səhifədə "Yenilə" kartı görünür.','Android-приложение (APK) теперь хранит всё приложение в своей памяти: работает и без интернета. При наличии сети работают чат, облачная синхронизация и проверка обновлений — при новой версии на главной появится карточка «Обновить».']},
  {icon:'☁️',title:['V28.7 — Bulud sinxronizasiya','V28.7 — Облачная синхронизация'],lead:['Gedişatını buluda yüklə, başqa cihazda davam et.','Выгрузи прогресс в облако и продолжи на другом устройстве.'],body:['Ayarlar bölməsində "Bulud sinxronizasiya" kartı əlavə olundu: kod yarat, buluda yüklə, başqa cihazda eyni kodu yazıb "Buludan gətir" ilə bərpa et. İstəyirsənsə, imtahan bitəndə nəticə avtomatik buluda yüklənir. Əlavə: ana səhifədə hər 7 gündən bir ehtiyat nüsxə xatırladıcısı çıxır.','В настройках появилась карта «Облачная синхронизация»: создай код, выгрузи прогресс и восстанови на другом устройстве. Также добавлено напоминание о резервной копии на главной странице.']},
  {icon:'💬',title:['V28.6 — Canlı çat və dostlar','V28.6 — Живой чат и друзья'],lead:['Dostlarla canlı söhbət birlikdə hazırlıq üçün.','Общение с друзьями для совместной подготовки.'],body:['Ağıllı hazırlıq → Dostlar bölməsində “Canlı çat” aç: otaq kodu yarat, dostlarına göndər, birlikdə söhbət edin. Çatda adının yanında buraxılış nəticənin faizi görünür. Bundan əlavə: qrafik, floşkart, sual bankı filtri, nəticə kartı və VİT sualları.','В разделе «Друзья» открой «Живой чат»: создай код комнаты, отправь друзьям и общайтесь вместе. Рядом с именем виден процент по выпускному. Также: график, флешкарты, фильтр банка вопросов, карта результата и вопросы ВИТ.']},
