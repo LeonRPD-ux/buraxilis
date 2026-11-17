@@ -3,7 +3,7 @@ name: APK yükləmə səhifəsi (GitHub Pages)
 on:
   push:
     branches: [main]
-    paths: ["github/**", ".github/workflows/pages.yml"]
+    paths: ["buraxilis/github/**", ".github/workflows/pages.yml"]
   workflow_dispatch:
 
 permissions:
@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Səhifəni hazırla
-        run: mkdir -p _pages && cp -r github/. _pages/
+        run: mkdir -p _pages && cp -r buraxilis/github/. _pages/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _pages
