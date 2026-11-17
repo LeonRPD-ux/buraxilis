@@ -39,7 +39,7 @@ public class LauncherActivity extends Activity {
         super.onCreate(savedInstanceState);
         try {
         web = new WebView(this);
-        web.setBackgroundColor(0xFF2540D9);
+        web.setBackgroundColor(isDark() ? 0xFF0D1126 : 0xFF2540D9);
 
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
@@ -49,6 +49,8 @@ public class LauncherActivity extends Activity {
         s.setLoadWithOverviewMode(true);
         s.setUseWideViewPort(true);
         s.setSupportZoom(false);
+        /* Sistem qara rejimi: prefers-color-scheme WebView-də işləmir,
+           ona görə JS-ə isDark() köprüsü ilə ötürəndə səhifə data-theme=dark qoyur */
 
         web.setWebViewClient(new WebViewClient() {
             @Override
@@ -88,6 +90,10 @@ public class LauncherActivity extends Activity {
             @JavascriptInterface
             public void download(String url) {
                 runOnUiThread(new Runnable() { public void run() { startDownload(url); } });
+            }
+            @JavascriptInterface
+            public boolean isDark() {
+                return isDark();
             }
         }, "AndroidBridge");
 
@@ -130,6 +136,29 @@ public class LauncherActivity extends Activity {
                 throw new RuntimeException(e);
             }
         }
+    }
+
+    /* Sistem qaranlıq rejimdədirsə true */
+    private boolean isDark() {
+        int m = getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK;
+        return m == android.content.res.Configuration.UI_MODE_NIGHT_YES;
+    }
+
+    /* İstifadəçi tərəfindən saxlanmış temaya müdaxilə etmədən sistem rejimini sinxronlaşdır */
+    private void syncDark() {
+        if (web == null) return;
+        try {
+            web.evaluateJavascript(
+                "(function(){var t=null;try{t=JSON.parse(localStorage.getItem('th'))}catch(e){}" +
+                "if(!t&&window.AndroidBridge&&AndroidBridge.isDark)document.documentElement.dataset.theme=AndroidBridge.isDark()?'dark':'light'})()",
+                null);
+        } catch (Throwable e) { }
+    }
+
+    @Override
+    public void onConfigurationChanged(android.content.res.Configuration c) {
+        super.onConfigurationChanged(c);
+        syncDark();
     }
 
     private void startDownload(String url) {

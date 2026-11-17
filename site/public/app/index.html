@@ -1526,6 +1526,37 @@ function notifUI(){const m=document.getElementById('updMsg');if(!m||document.get
  b.disabled=p!=='default';b.onclick=window.updNotif;m.parentNode.insertBefore(b,m)}
 try{new MutationObserver(notifUI).observe(document.body,{childList:true,subtree:true})}catch(e){}
 }
+else{
+/* ===== APK rejimi (appassets): SW yoxdur — birbaşa APK yeniləməsi ===== */
+const ru=()=>document.documentElement.lang=='ru',T=(a,r)=>ru()?r:a;
+const vnum=v=>{const m=/(\d+)\.(\d+)/.exec(v||'');return m?(+m[1])*1000+(+m[2]):0};
+const APKURL='https://github.com/kennedyleonscott220-png/buraxilis/releases/latest/download/Buraxilis.apk';
+const VURL='https://buraxilis.kennedyleonscott220.workers.dev/version.json?t=';
+/* sistem qara rejimini tədbiq et (WebView prefers-color-scheme:dark vermədiyi üçün) */
+try{const thv=LS.g('th',null);if(!thv&&window.AndroidBridge&&AndroidBridge.isDark)document.documentElement.dataset.theme=AndroidBridge.isDark()?'dark':'light'}catch(e){}
+let busy=false;
+async function apkVer(){try{const r=await fetch(VURL+Date.now(),{cache:'no-store'});if(r.ok){const j=await r.json();if(j&&j.version)return String(j.version)}}catch(e){}return null}
+function apkGo(){if(window.AndroidBridge&&AndroidBridge.download)AndroidBridge.download(APKURL);else location.href=APKURL}
+function apkCard(rv){try{const a=document.getElementById('app');if(!a||document.getElementById('apkUpdCard')||a.classList.contains('exam'))return;
+ const d=document.createElement('div');d.id='apkUpdCard';d.className='card';
+ d.innerHTML='<b>🆕 '+T('Yeni versiya: '+rv,'Новая версия: '+rv)+'</b><p class="m">'+T('APK-nı yükləyib quraşdır — gedişatın silinmir.','Скачай и установи APK — данные не удалятся.')+'</p>';
+ const b=document.createElement('button');b.className='p';b.textContent=T('Yenilə','Обновить');b.onclick=apkGo;
+ d.appendChild(b);a.insertBefore(d,a.firstChild)}catch(e){}}
+async function apkCheck(){if(busy)return;busy=true;try{
+ const rv=await apkVer();
+ if(rv!==null&&vnum(rv)>vnum(APP_VER)){if(!document.getElementById('apkUpdCard'))apkCard(rv)}
+ else{const c=document.getElementById('apkUpdCard');if(c)c.remove()}
+ }finally{busy=false}}
+addEventListener('load',()=>{setTimeout(apkCheck,2500)});
+setInterval(apkCheck,15*60*1000);
+addEventListener('online',()=>apkCheck());
+window.chkUpd=async function(){const t=document.getElementById('updMsg'),say=m=>{if(t)t.textContent=m};
+ say(T('Yoxlanılır...','Проверка...'));
+ const rv=await apkVer();
+ if(rv===null){say(T('Yoxlamaq olmadı, internet yoxdur.','Не удалось проверить, нет интернета.'));return}
+ if(vnum(rv)>vnum(APP_VER)){say(T('Yeni versiya var ('+rv+'). Ana səhifədəki «Yenilə» düyməsinə bas.','Есть новая версия ('+rv+'). Нажми «Обновить» на главной.'));apkCard(rv)}
+ else say(T('Ən son versiyadasan ('+APP_VER+').','У тебя последняя версия ('+APP_VER+').'))};
+}
 
 if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{})}catch(e){}
 
