@@ -9,7 +9,7 @@
   "assets": {
     "directory": ".",
     "binding": "ASSETS",
-    "run_worker_first": ["/app-release-signed.apk", "/app-release-bundle.aab", "/.well-known/assetlinks.json"]
+    "run_worker_first": ["/app-release-signed.apk", "/app-release-bundle.aab", "/.well-known/assetlinks.json", "/version.json"]
   },
   "durable_objects": {
     "bindings": [
