@@ -130,6 +130,14 @@ export default {
       });
     }
     if (url.pathname === '/.well-known/assetlinks.json') return json(ASSETLINKS);
+    /* V28.9: APK (appassets origin) üçün version.json CORS başlığı ilə — yeniləmə yoxlaması */
+    if (url.pathname === '/version.json') {
+      const resp = await env.ASSETS.fetch(req);
+      const h = new Headers(resp.headers);
+      h.set('access-control-allow-origin', '*');
+      h.set('cache-control', 'no-store');
+      return new Response(resp.body, { status: resp.status, headers: h });
+    }
     /* APK/AAB: brauzer birbaşa yükləsin, "səhifə" kimi açmasın */
     if (url.pathname.endsWith('.apk') || url.pathname.endsWith('.aab')) {
       const resp = await env.ASSETS.fetch(req);
