@@ -37,6 +37,7 @@ public class LauncherActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        try {
         web = new WebView(this);
         web.setBackgroundColor(0xFF2540D9);
 
@@ -58,7 +59,9 @@ public class LauncherActivity extends Activity {
                 if (p.startsWith("/www/")) p = p.substring(5); else return null;
                 try {
                     InputStream in = getAssets().open("www/" + p);
-                    return new WebResourceResponse(mime(p), "utf-8", in);
+                    String m = mime(p);
+                    boolean text = m.startsWith("text/") || m.contains("javascript") || m.contains("json") || m.contains("manifest");
+                    return new WebResourceResponse(m, text ? "utf-8" : null, in);
                 } catch (Exception e) {
                     return null;
                 }
@@ -108,6 +111,18 @@ public class LauncherActivity extends Activity {
 
         setContentView(web);
         web.loadUrl(START);
+        } catch (Throwable e) {
+            try {
+                java.io.StringWriter sw = new java.io.StringWriter();
+                e.printStackTrace(new java.io.PrintWriter(sw));
+                android.content.Intent i = new android.content.Intent(this, CrashActivity.class);
+                i.putExtra("trace", sw.toString());
+                startActivity(i);
+                finish();
+            } catch (Throwable ignored) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     private void startDownload(String url) {

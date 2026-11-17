@@ -28,6 +28,11 @@
         </activity>
 
         <!-- Yüklənmiş APK faylını açmaq üçün -->
+        <!-- Çökmə xətasını göstərən diaqnostik səhifə -->
+        <activity android:name="CrashActivity"
+            android:exported="false"
+            android:label="Xəta"/>
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="@string/providerAuthority"
