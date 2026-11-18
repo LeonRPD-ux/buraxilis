@@ -33,11 +33,15 @@ public class LauncherActivity extends Activity {
 
     private WebView web;
     private long dlId = -1;
+    private File updDir;
+    private volatile String curVer = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         try {
+        updDir = new File(getFilesDir(), "upd");
+        updDir.mkdirs();
         web = new WebView(this);
         web.setBackgroundColor(isDark() ? 0xFF0D1126 : 0xFF2540D9);
 
@@ -59,6 +63,17 @@ public class LauncherActivity extends Activity {
                 if (!HOST.equals(u.getHost())) return null;
                 String p = u.getPath() == null ? "" : u.getPath();
                 if (p.startsWith("/www/")) p = p.substring(5); else return null;
+                /* V29.0: serverdən yenilənmiş məzmun — updDir-dəki daha yeni index.html/version.json üstün tutulur */
+                if (p.equals("index.html") || p.equals("version.json")) {
+                    try {
+                        File fi = new File(updDir, p);
+                        if (fi.exists()) {
+                            String s = p.equals("index.html") ? readTxt(new File(updDir, "version.txt")) : readTxt(fi);
+                            if (curVer == null || vnum(s) > vnum(curVer))
+                                return new WebResourceResponse(p.equals("index.html") ? "text/html" : "application/json", "utf-8", new java.io.FileInputStream(fi));
+                        }
+                    } catch (Throwable e) { }
+                }
                 try {
                     InputStream in = getAssets().open("www/" + p);
                     String m = mime(p);
@@ -94,6 +109,60 @@ public class LauncherActivity extends Activity {
             @JavascriptInterface
             public boolean isDark() {
                 return isDark();
+            }
+            /* V29.0: səhifə versiyasını bildirir + köhnə keş təmizlənir */
+            @JavascriptInterface
+            public void init(String v) {
+                curVer = v == null ? "" : v;
+                try {
+                    File fi = new File(updDir, "index.html"), vf = new File(updDir, "version.txt");
+                    if (fi.exists() && vf.exists() && vnum(readTxt(vf)) < vnum(curVer)) { fi.delete(); vf.delete(); }
+                } catch (Throwable e) { }
+            }
+            /* APK-nın öz versiyası (versionName) — native yeniləmə lazımlığını müəyyən etmək üçün */
+            @JavascriptInterface
+            public String ver() {
+                try { return getPackageManager().getPackageInfo(getPackageName(), 0).versionName; } catch (Throwable e) { return ""; }
+            }
+            /* V29.0: yeni məzmunu arxa planda yüklə — bitən kimi JS-ə xəbər ver */
+            @JavascriptInterface
+            public void srvUpd(final String v) {
+                new Thread(new Runnable() { public void run() {
+                    boolean ok = false;
+                    try {
+                        byte[] buf = new byte[8192]; int n;
+                        java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream();
+                        java.net.HttpURLConnection c = (java.net.HttpURLConnection) new java.net.URL(
+                            "https://buraxilis.kennedyleonscott220.workers.dev/index.html?nocache=" + System.currentTimeMillis()).openConnection();
+                        c.setConnectTimeout(15000); c.setReadTimeout(30000);
+                        java.io.InputStream in = c.getInputStream();
+                        while ((n = in.read(buf)) > 0) bo.write(buf, 0, n);
+                        in.close();
+                        byte[] data = bo.toByteArray();
+                        if (data.length < 100000) throw new Exception("fayl çox qısadır");
+                        File tmp = new File(updDir, "index.html.new");
+                        java.io.FileOutputStream fo = new java.io.FileOutputStream(tmp);
+                        fo.write(data); fo.close();
+                        new File(updDir, "index.html").delete();
+                        tmp.renameTo(new File(updDir, "index.html"));
+                        java.io.InputStream in2 = new java.net.URL(
+                            "https://buraxilis.kennedyleonscott220.workers.dev/version.json?nocache=" + System.currentTimeMillis()).openStream();
+                        bo.reset();
+                        while ((n = in2.read(buf)) > 0) bo.write(buf, 0, n);
+                        in2.close();
+                        if (bo.size() > 0 && bo.size() < 4096) {
+                            java.io.FileOutputStream fo2 = new java.io.FileOutputStream(new File(updDir, "version.json"));
+                            fo2.write(bo.toByteArray()); fo2.close();
+                        }
+                        java.io.FileOutputStream fo3 = new java.io.FileOutputStream(new File(updDir, "version.txt"));
+                        fo3.write(v.getBytes("utf-8")); fo3.close();
+                        ok = true;
+                    } catch (Throwable e) { ok = false; }
+                    final boolean fok = ok;
+                    runOnUiThread(new Runnable() { public void run() {
+                        try { web.evaluateJavascript("try{window.onSrvUpd(" + (fok ? "'" + v + "',1" : "'',0") + ")}catch(e){}", null); } catch (Throwable e) { }
+                    }});
+                }}).start();
             }
         }, "AndroidBridge");
 
@@ -136,6 +205,22 @@ public class LauncherActivity extends Activity {
                 throw new RuntimeException(e);
             }
         }
+    }
+
+    /* V29.0: "V30.1" → 30001 kimi müqayisə üçün */
+    private static long vnum(String v) {
+        try {
+            java.util.regex.Matcher m = java.util.regex.Pattern.compile("(\\d+)\\.(\\d+)").matcher(v == null ? "" : v);
+            if (m.find()) return Long.parseLong(m.group(1)) * 1000 + Long.parseLong(m.group(2));
+        } catch (Throwable e) { }
+        return 0;
+    }
+
+    private static String readTxt(File f) {
+        try {
+            java.util.Scanner sc = new java.util.Scanner(f, "utf-8").useDelimiter("\\A");
+            return sc.hasNext() ? sc.next() : "";
+        } catch (Throwable e) { return ""; }
     }
 
     /* Sistem qaranlıq rejimdədirsə true */
