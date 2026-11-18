@@ -166,31 +166,6 @@ public class LauncherActivity extends Activity {
             }
         }, "AndroidBridge");
 
-        BroadcastReceiver done = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context c, Intent i) {
-                long id = i.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
-                if (id != dlId) return;
-                try {
-                    File f = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "Buraxilis.apk");
-                    Uri u = FileProvider.getUriForFile(c, "az.buraxilis.app.fileprovider", f);
-                    Intent it = new Intent(Intent.ACTION_VIEW);
-                    it.setDataAndType(u, "application/vnd.android.package-archive");
-                    it.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(it);
-                } catch (Exception e) {
-                    Toast.makeText(c, "APK yükləndi — Yüklənlər qovluğundan quraşdır", Toast.LENGTH_LONG).show();
-                }
-            }
-        };
-        try {
-            androidx.core.content.ContextCompat.registerReceiver(this, done,
-                    new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),
-                    androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED);
-        } catch (Throwable e) {
-            registerReceiver(done, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
-        }
-
         setContentView(web);
         web.loadUrl(START);
         } catch (Throwable e) {
@@ -246,18 +221,36 @@ public class LauncherActivity extends Activity {
         syncDark();
     }
 
+    /* V29.0: birbaşa yükləmə — APK tətbiqin öz yaddaşına endirilir, bitən kimi
+       quraşdırma ekranı açılır (DownloadManager + receiver zəncirinə ehtiyac yoxdur) */
     private void startDownload(String url) {
-        try {
-            DownloadManager dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
-            DownloadManager.Request rq = new DownloadManager.Request(Uri.parse(url));
-            rq.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-            rq.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "Buraxilis.apk");
-            rq.setMimeType("application/vnd.android.package-archive");
-            dlId = dm.enqueue(rq);
-            Toast.makeText(this, "Yeni APK yüklənir…", Toast.LENGTH_SHORT).show();
-        } catch (Exception e) {
-            try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); } catch (Exception e2) { }
-        }
+        Toast.makeText(this, "Yeni APK yüklənir…", Toast.LENGTH_SHORT).show();
+        final android.content.Context ctx = this;
+        new Thread(new Runnable() { public void run() {
+            try {
+                File dst = new File(getExternalFilesDir(null), "Buraxilis.apk");
+                java.io.FileOutputStream fo = new java.io.FileOutputStream(dst);
+                java.io.InputStream in = new java.net.URL(url).openStream();
+                byte[] b = new byte[8192]; int n;
+                while ((n = in.read(b)) > 0) fo.write(b, 0, n);
+                in.close(); fo.close();
+                runOnUiThread(new Runnable() { public void run() {
+                    try {
+                        Uri u = FileProvider.getUriForFile(ctx, "az.buraxilis.app.fileprovider", dst);
+                        Intent it = new Intent(Intent.ACTION_VIEW);
+                        it.setDataAndType(u, "application/vnd.android.package-archive");
+                        it.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(it);
+                    } catch (Throwable e) {
+                        Toast.makeText(ctx, "Yükləndi — tətbiqin qovluğundan quraşdır", Toast.LENGTH_LONG).show();
+                    }
+                }});
+            } catch (Throwable e) {
+                runOnUiThread(new Runnable() { public void run() {
+                    Toast.makeText(ctx, "Yükləmə alınmadı — interneti yoxlayıb yenidən cəhd et", Toast.LENGTH_LONG).show();
+                }});
+            }
+        }}).start();
     }
 
     private static String mime(String p) {
