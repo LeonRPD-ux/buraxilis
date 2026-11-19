@@ -5,7 +5,13 @@
 package az.buraxilis.app;
 
 import android.app.Activity;
+import android.app.AlarmManager;
 import android.app.DownloadManager;
+import android.app.PendingIntent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.os.Build;
+import android.os.SystemClock;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -42,6 +48,20 @@ public class LauncherActivity extends Activity {
         try {
         updDir = new File(getFilesDir(), "upd");
         updDir.mkdirs();
+        /* V29.3: 12 saatda bir yeni versiya yoxlaması (tətbiq bağlı olsa da işləyir) */
+        try {
+            Intent al = new Intent(this, UpdateCheckReceiver.class);
+            int fl = PendingIntent.FLAG_UPDATE_CURRENT;
+            if (Build.VERSION.SDK_INT >= 23) fl |= PendingIntent.FLAG_IMMUTABLE;
+            PendingIntent pi = PendingIntent.getBroadcast(this, 0, al, fl);
+            AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
+            long period = 12 * 3600 * 1000L;
+            am.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + period, period, pi);
+        } catch (Throwable e) { }
+        try {
+            if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
+                requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 1001);
+        } catch (Throwable e) { }
         web = new WebView(this);
         web.setBackgroundColor(isDark() ? 0xFF0D1126 : 0xFF2540D9);
 
@@ -114,6 +134,12 @@ public class LauncherActivity extends Activity {
             @JavascriptInterface
             public void init(String v) {
                 curVer = v == null ? "" : v;
+                try {
+                    SharedPreferences p = getSharedPreferences("app", MODE_PRIVATE);
+                    p.edit().putString("curVer", curVer).apply();
+                    String last = p.getString("notified", "");
+                    if (last.length() > 0 && vnum(last) <= vnum(curVer)) p.edit().putString("notified", "").apply();
+                } catch (Throwable e) { }
                 try {
                     File fi = new File(updDir, "index.html"), vf = new File(updDir, "version.txt");
                     if (fi.exists() && vf.exists() && vnum(readTxt(vf)) < vnum(curVer)) { fi.delete(); vf.delete(); }

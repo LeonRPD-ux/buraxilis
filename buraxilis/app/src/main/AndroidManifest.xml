@@ -27,6 +27,9 @@
             </intent-filter>
         </activity>
 
+        <!-- 12 saatda bir: yeni versiya varsa fon bildirişi -->
+        <receiver android:name="UpdateCheckReceiver" android:exported="false"/>
+
         <!-- Yüklənmiş APK faylını açmaq üçün -->
         <!-- Çökmə xətasını göstərən diaqnostik səhifə -->
         <activity android:name="CrashActivity"

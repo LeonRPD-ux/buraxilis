@@ -1,4 +1,4 @@
-const V='buraxilis-v29-2',VER='V29.2';
+const V='buraxilis-v29-3',VER='V29.3';
 const FILES=['./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png','./icon-maskable-512.png'];
 // Quraşdırma: hər faylı ayrıca yüklə; çatışmayan fayl (məs. ikon) quraşdırmanı pozmasın
 self.addEventListener('install',e=>{e.waitUntil((async()=>{const c=await caches.open(V);
@@ -25,9 +25,13 @@ self.addEventListener('fetch',e=>{const r=e.request,u=new URL(r.url);
 self.addEventListener('periodicsync',e=>{if(e.tag!=='upd-check')return;e.waitUntil((async()=>{try{
  const r=await fetch('version.json?t='+Date.now(),{cache:'no-store'}),j=await r.json();
  const n=x=>{const m=/(\d+)\.(\d+)/.exec(x||'');return m?(+m[1])*1000+(+m[2]):0};
- if(n(j.version)>n(VER))await self.registration.showNotification('Yeni versiya: '+j.version,{body:'Yeniləmək üçün toxun.',icon:'icon-192.png',badge:'icon-192.png',tag:'upd',data:{url:'./'}})}catch(_){}})())});
+ if(n(j.version)>n(VER)){
+ try{const c=await caches.open('upd-notify'),last=await c.match('./last');
+  if(last&&(await last.text())===j.version)return;
+  await c.put('./last',new Response(j.version))}catch(_){}
+ await self.registration.showNotification('Yeni versiya: '+j.version,{body:'Yeniləmək üçün toxun.',icon:'icon-192.png',badge:'icon-192.png',tag:'upd',data:{url:'./'}})}}catch(_){}})())});
 self.addEventListener('notificationclick',e=>{e.notification.close();e.waitUntil((async()=>{
  const cl=await clients.matchAll({type:'window',includeUncontrolled:true});
  for(const c of cl){if('focus' in c)return c.focus()}
  return clients.openWindow('./')})())});
-// build: V29.2
+// build: V29.3
