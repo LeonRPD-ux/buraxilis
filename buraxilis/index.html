@@ -1475,7 +1475,7 @@ window.vocHome=function(){_vh.apply(this,arguments);try{
 })()}catch(e){console.warn(e)}
 
 /* PWA */
-var APP_VER='V29.1';
+var APP_VER='V29.2';
 try{if('serviceWorker' in navigator&&location.protocol.indexOf('http')==0&&location.hostname!=='appassets.androidplatform.net'){
 const ru=()=>document.documentElement.lang=='ru',T=(a,r)=>ru()?r:a;
 const vnum=v=>{const m=/(\d+)\.(\d+)/.exec(v||'');return m?(+m[1])*1000+(+m[2]):0};
@@ -1564,26 +1564,37 @@ const avn=v=>{const a=String(v||'0').split('.');return (parseInt(a[0],10)||0)*10
 let lav='';try{if(window.AndroidBridge&&AndroidBridge.ver)lav=AndroidBridge.ver()||''}catch(e){}
 /* native səhifəni yükləyib bitirdikdə çağırılır: ok → səhifə yenilənir */
 window.onSrvUpd=function(v,ok){
+  srvBusy=false;
+  try{const bar=document.getElementById('updProgBar'),tx=document.getElementById('updProgTx');if(bar&&ok)bar.style.width='100%';if(tx&&ok)tx.textContent='100%'}catch(e){}
  if(ok){const c=document.getElementById('apkUpdCard');if(c)c.remove();
   try{const t=document.getElementById('updMsg');if(t)t.textContent=T('Yeni versiya ('+v+') hazırdır — səhifə yenilənir…','Новая версия ('+v+') готова — обновляем…')}catch(e){}
   setTimeout(()=>location.reload(),1200)}
  else{try{const c=document.getElementById('apkUpdCard');if(c){const p=c.querySelector('p');if(p)p.textContent=T('Yükləmə alınmadı — interneti yoxlayıb yenidən cəhd et.','Не удалось скачать — проверь интернет и попробуй снова.')}}catch(e){}}};
 async function apkMeta(){try{const r=await fetch(VURL+Date.now(),{cache:'no-store'});if(r.ok){const j=await r.json();if(j&&j.version)return j}}catch(e){}return null}
-function apkGo(){if(window.AndroidBridge&&AndroidBridge.download)AndroidBridge.download(APKURL);else location.href=APKURL}
+let srvBusy=false,pendingUpd='';
+function apkGo(){if(window.AndroidBridge&&AndroidBridge.srvUpd)startSrv(pendingUpd||APP_VER);
+ else if(window.AndroidBridge&&AndroidBridge.download)AndroidBridge.download(APKURL);else location.href=APKURL}
+function startSrv(v){if(srvBusy||!window.AndroidBridge||!window.AndroidBridge.srvUpd)return;srvBusy=true;
+ try{const t=document.getElementById('updProgTx');if(t)t.textContent='0%'}catch(e){}
+ try{AndroidBridge.srvUpd(String(v))}catch(e){srvBusy=false}}
+window.onSrvProgress=function(done,total){try{const p=total>0?Math.min(100,Math.round(done*100/total)):0;
+ const bar=document.getElementById('updProgBar'),tx=document.getElementById('updProgTx');
+ if(bar)bar.style.width=p+'%';if(tx)tx.textContent=p+'%'}catch(e){}};
 function apkCard(rv){try{const a=document.getElementById('app');if(!a||document.getElementById('apkUpdCard')||a.classList.contains('exam'))return;
  const d=document.createElement('div');d.id='apkUpdCard';d.className='card';
- d.innerHTML='<b>🆕 '+T('Yeni versiya: '+rv,'Новая версия: '+rv)+'</b><p class="m">'+T('APK-nı yükləyib quraşdır — gedişatın silinmir.','Скачай и установи APK — данные не удалятся.')+'</p>';
+ d.innerHTML='<b>🆕 '+T('Yeni versiya: '+rv,'Новая версия: '+rv)+'</b><p class="m">'+T('Tətbiq daxilində yenilənir — APK endirilmir, gedişatın silinmir.','Обновление внутри приложения — APK не скачивается, данные не удаляются.')+'</p><div style="height:8px;border-radius:99px;background:var(--b);overflow:hidden"><div id="updProgBar" style="height:100%;width:0;background:var(--p);transition:width .25s"></div></div><p class="m" id="updProgTx" style="margin-top:6px">0%</p>';
  const b=document.createElement('button');b.className='p';b.textContent=T('Yenilə','Обновить');b.onclick=apkGo;
  d.appendChild(b);a.insertBefore(d,a.firstChild)}catch(e){}}
 async function apkCheck(){if(busy)return;busy=true;try{
  const j=await apkMeta();
  if(j===null)return;
  const srvNew=vnum(j.version)>vnum(APP_VER),apkNew=j.apk&&lav&&avn(j.apk)>avn(lav);
- if(apkNew){if(!document.getElementById('apkUpdCard'))apkCard(j.version)}
- else if(srvNew&&window.AndroidBridge&&AndroidBridge.srvUpd){
+ if(srvNew&&window.AndroidBridge&&AndroidBridge.srvUpd){
+  pendingUpd=String(j.version);
   if(!document.getElementById('apkUpdCard'))apkCard(j.version);
-  const c=document.getElementById('apkUpdCard');if(c){const p=c.querySelector('p');if(p)p.textContent=T('Yeni versiya serverdən yüklənir… arxa planda, quraşdırma lazım deyil.','Новая версия загружается с сервера… в фоне, установка не нужна.')}
-  AndroidBridge.srvUpd(String(j.version))}
+  startSrv(pendingUpd)}
+ else if((apkNew||srvNew)&&window.AndroidBridge&&AndroidBridge.download){
+  pendingUpd=String(j.version);if(!document.getElementById('apkUpdCard'))apkCard(j.version)}
  else{const c=document.getElementById('apkUpdCard');if(c)c.remove()}
  }finally{busy=false}}
 addEventListener('load',()=>{setTimeout(apkCheck,2500)});
@@ -1594,9 +1605,9 @@ window.chkUpd=async function(){const t=document.getElementById('updMsg'),say=m=>
  const j=await apkMeta();
  if(j===null){say(T('Yoxlamaq olmadı, internet yoxdur.','Не удалось проверить, нет интернета.'));return}
  const srvNew=vnum(j.version)>vnum(APP_VER),apkNew=j.apk&&lav&&avn(j.apk)>avn(lav);
- if(apkNew){say(T('Yeni versiya var ('+j.version+'). Ana səhifədəki «Yenilə» düyməsinə bas.','Есть новая версия ('+j.version+'). Нажми «Обновить» на главной.'));apkCard(j.version)}
- else if(srvNew&&window.AndroidBridge&&AndroidBridge.srvUpd){say(T('Yeni versiya ('+j.version+') yüklənir… quraşdırma lazım deyil.','Новая версия ('+j.version+') загружается… установка не нужна.'));apkCard(j.version);AndroidBridge.srvUpd(String(j.version))}
- else if(srvNew){say(T('Yeni versiya var ('+j.version+').','Есть новая версия ('+j.version+').'));apkCard(j.version)}
+ if(srvNew&&window.AndroidBridge&&AndroidBridge.srvUpd){pendingUpd=String(j.version);apkCard(j.version);
+  say(T('Yeni versiya ('+j.version+') yüklənir… quraşdırma lazım deyil.','Новая версия ('+j.version+') загружается… установка не нужна.'));startSrv(pendingUpd)}
+ else if(srvNew||apkNew){pendingUpd=String(j.version);say(T('Yeni versiya var ('+j.version+').','Есть новая версия ('+j.version+').'));apkCard(j.version)}
  else say(T('Ən son versiyadasan ('+APP_VER+').','У тебя последняя версия ('+APP_VER+').'))};
 }
 
@@ -1605,6 +1616,7 @@ if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catc
 /* ===== Yeniliklər: 4 səhifəli buraxılış bələdçisi ===== */
 try{
 const NEWS_PAGES=[
+  {icon:'⬇️',title:['V29.2 — Tətbiq daxilində yeniləmə','V29.2 — Обновление внутри приложения'],lead:['Yeni versiya APK endirmədən, proqres çubuğu ilə yüklənir.','Новая версия загружается без APK, с индикатором прогресса.'],body:['Yeniləmə artıq tətbiqin içində həyata keçirilir: APK faylını endirmək və quraşdırmaq lazım deyil. Yükləmə faizi kiçik proqres çubuğunda görünür, bitəndə səhifə özü yenilənir.','Обновление теперь выполняется внутри приложения: скачивать и устанавливать APK не нужно. Процент загрузки отображается на небольшой полоске, после завершения страница обновляется автоматически.']},
   {icon:'⚗️',title:['V29.1 — 540 yeni kimya sualı','V29.1 — 540 новых вопросов по химии'],lead:['Güvən 2026 toplusundan 18 bölmə, 540 test sualı əlavə olundu.','Добавлены 18 разделов и 540 тестовых вопросов из сборника «Гüvən 2026».'],body:['Kimya sual bankı genişləndi: əsas anlayışlardan karbon turşularınadək 18 mövzu üzrə 540 sual. Suallar mövzu mini-testlərində və ümumi bankda istifadə olunur.','Банк вопросов по химии расширен: 540 вопросов по 18 темам — от основных понятий до карбоновых кислот. Вопросы доступны в тестах по темам и в общем банке.']},
  {icon:'⚙️',title:['V29.0 — Yeni Ayarlar','V29.0 — Новые настройки'],lead:['Ayarlar kategoriyalara bölündü — hər şey 2 klikdə.','Настройки разделены по категориям — всё в два клика.'],body:['Ayarlar artıq 5 kateqoriyadadır: 👤 Profil, 🎨 Görünüş, 📝 İmtahan, 🧪 Məşq, 💾 Məlumat. Hər kateqoriyanın öz səhifəsi var, üstündə hazırkı seçimin xülasəsi görünür. Dil seçimi Profil bölməsinə köçürüldü.','Настройки теперь в 5 категориях: 👤 Профиль, 🎨 Оформление, 📝 Экзамен, 🧪 Практика, 💾 Данные. У каждой категории своя страница с краткой сводкой. Выбор языка перенесён в «Профиль».']},
  {icon:'🎨',title:['V28.9 — Göstərici düzəlişi','V28.9 — Исправление показателей'],lead:['"Öyrənmə göstəricilərin" kartındakı rəqəmlər artıq görünür.','Цифры в карточке «Показатели обучения» теперь видны.'],body:['İşıqlı temada XP, ardıcıl günlər və digər göstəricilərin görünməməsi problemi düzəldildi.','Исправлена проблема невидимых цифр XP, дней подряд и других показателей в светлой теме.']},
@@ -2145,21 +2157,5 @@ window.addEventListener('load',()=>{try{if(TAB==='home')bkBanner()}catch(e){}});
 (function(){try{const _h=window.home;if(typeof _h==='function')window.home=function(){const r=_h.apply(this,arguments);try{bkBanner()}catch(e){}return r}}catch(e){}
  try{const _f=window.finish;if(typeof _f==='function')window.finish=function(){const r=_f.apply(this,arguments);try{syAuto()}catch(e){}return r}}catch(e){}})();
 
-/* ---- V28.8: APK daxili yeniləmə yoxlayıcısı (yalnız APK rejimində işləyir) ---- */
-(function(){try{
- if(location.hostname!=='appassets.androidplatform.net')return;
- const APK_URL='https://kennedyleonscott220-png.github.io/buraxilis/Buraxilis.apk';
- const show=()=>{try{const a=document.getElementById('app');if(!a)return;const o=document.getElementById('apkUpd');if(o)return;
-  const d=document.createElement('div');d.id='apkUpd';d.className='card';
-  d.innerHTML='<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="font-size:26px">🆕</span><div style="flex:1;min-width:170px"><b>Yeni versiya buraxıldı</b><p class="m">Tətbiqi ən son versiyaya yenilə.</p></div><button class="p" data-upd>Yenilə</button><button data-skip>Bağla</button></div>';
-  d.querySelector('[data-upd]').onclick=()=>{try{window.AndroidBridge&&AndroidBridge.download(APK_URL)}catch(e){}};
-  d.querySelector('[data-skip]').onclick=()=>{try{d.remove()}catch(e){}};
-  a.insertBefore(d,a.firstChild)}catch(e){}};
- fetch('https://buraxilis.kennedyleonscott220.workers.dev/version.json',{cache:'no-store'}).then(r=>r.json()).then(j=>{
-  try{if(!j.version||j.version===APP_VER)return}catch(e){return}
-  show();
-  try{const _h=window.home;if(typeof _h==='function')window.home=function(){const r=_h.apply(this,arguments);try{show()}catch(e){}return r}}catch(e){}
- }).catch(()=>{});
-}catch(e){}})();
 </script>
 </body></html>

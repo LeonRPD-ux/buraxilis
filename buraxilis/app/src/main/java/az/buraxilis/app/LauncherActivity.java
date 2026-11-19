@@ -136,7 +136,21 @@ public class LauncherActivity extends Activity {
                             "https://buraxilis.kennedyleonscott220.workers.dev/index.html?nocache=" + System.currentTimeMillis()).openConnection();
                         c.setConnectTimeout(15000); c.setReadTimeout(30000);
                         java.io.InputStream in = c.getInputStream();
-                        while ((n = in.read(buf)) > 0) bo.write(buf, 0, n);
+                        final int total = c.getContentLength();
+                        long got = 0, reported = 0;
+                        if (total > 0) runOnUiThread(new Runnable() { public void run() {
+                            try { web.evaluateJavascript("try{window.onSrvProgress(0," + total + ")}catch(e){}", null); } catch (Throwable e) { }
+                        }});
+                        while ((n = in.read(buf)) > 0) {
+                            bo.write(buf, 0, n); got += n;
+                            if (total > 0 && (got - reported >= 65536 || got >= total)) {
+                                reported = got;
+                                final long g = got;
+                                runOnUiThread(new Runnable() { public void run() {
+                                    try { web.evaluateJavascript("try{window.onSrvProgress(" + g + "," + total + ")}catch(e){}", null); } catch (Throwable e) { }
+                                }});
+                            }
+                        }
                         in.close();
                         byte[] data = bo.toByteArray();
                         if (data.length < 100000) throw new Exception("fayl çox qısadır");

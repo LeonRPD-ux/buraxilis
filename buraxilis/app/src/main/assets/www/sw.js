@@ -1,4 +1,4 @@
-const V='buraxilis-v29-1',VER='V29.1';
+const V='buraxilis-v29-2',VER='V29.2';
 const FILES=['./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png','./icon-maskable-512.png'];
 // Quraşdırma: hər faylı ayrıca yüklə; çatışmayan fayl (məs. ikon) quraşdırmanı pozmasın
 self.addEventListener('install',e=>{e.waitUntil((async()=>{const c=await caches.open(V);
@@ -30,4 +30,4 @@ self.addEventListener('notificationclick',e=>{e.notification.close();e.waitUntil
  const cl=await clients.matchAll({type:'window',includeUncontrolled:true});
  for(const c of cl){if('focus' in c)return c.focus()}
  return clients.openWindow('./')})())});
-// build: V29.1
+// build: V29.2
